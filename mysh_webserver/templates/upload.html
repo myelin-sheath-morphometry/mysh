@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Upload Image for Segmentation</h2>
+
+    {% if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form class="upload-form" id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Select microscopy image:</label>
+            <div class="file-input">
+                <input type="file" id="file" name="file" accept="image/*" required>
+                <p id="fileName" style="color: #4a5568;">No file selected</p>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">Process Image</button>
+        <span id="loading" style="display:none; margin-left:1rem;">Uploading...</span>
+    </form>
+
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+        <h3 style="margin-bottom: 1rem; color: #4a5568;">About Mysh</h3>
+        <p style="color: #718096; line-height: 1.6;">
+            <code>mysh</code> (pronounced <i>mɨʃ</i>, in polish <a href="https://pl.wikipedia.org/wiki/Mysz"><i>mysz</i></a>) is an application for detection
+            of morphology of myelin sheaths from microscopic pictures of nerves.
+        </p>
+    </div>
+</div>
+
+<script>
+document.getElementById('file').addEventListener('change', function(e) {
+    const fileName = e.target.files.length ? e.target.files[0].name : 'No file selected';
+    document.getElementById('fileName').textContent = fileName;
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('loading').style.display = 'inline';
+});
+</script>
+{% endblock %}
