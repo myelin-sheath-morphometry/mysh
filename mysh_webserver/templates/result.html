@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="result-header">
+        <h2>Segmentation Results</h2>
+        <div>
+            <a href="/download/{{ job_id }}" class="btn">Download Mask</a>
+            <a href="/" class="btn btn-secondary" style="margin-left: 0.5rem;">Process Another</a>
+        </div>
+    </div>
+    
+    <div class="result-content images-side-by-side">
+        <div class="result-image">
+            <h3 style="margin-bottom: 1rem; color: #4a5568;">Original Image</h3>
+            <img src="/orig/{{ job_id }}" alt="Segmentation result" />
+        </div>
+
+        <div class="result-image">
+            {% if status == 'SUCCESS' %}
+            <h3 style="margin-bottom: 1rem; color: #4a5568;">Processed Image</h3>
+            <img src="/mask/{{ job_id }}" alt="Segmentation result" />
+            {% else %}
+                {% if status != 'ERROR'  %}
+                <div class="progress-container" style="margin: 2rem 0;">
+                    <div class="progress-bar-bg" style="background: #e2e8f0; border-radius: 8px; height: 20px;">
+                        <div id="progress-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; border-radius: 8px; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <p id="progress-text" style="margin-top: 0.5rem; color: #4a5568;">Starting processing...</p>
+                </div>
+                {% else %}
+                <h3 style="margin-bottom: 1rem; color: #4a5568;">Processing Failed</h3>
+                {% endif %}
+            {% endif %}
+        </div>
+        
+        <div class="result-stats">
+            <h3 style="margin-bottom: 1rem; color: #4a5568;">Job Information</h3>
+            
+            <div class="stat-item">
+                <span class="stat-label">Job ID:</span>
+                <span class="stat-value">{{ job_id }}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Job status:</span>
+                <span class="stat-value">{{ status }}</span>
+            </div>
+
+            <br>
+            <br>
+            {% if metrics_available %}
+            <h3 style="color: #4a5568;">Analysis Results - averages</h3>
+            <ul style="margin-bottom: 1rem; color: #4a5568;">
+                {% for key, value in metrics_averages.items() %}
+                <li><strong>{{ key|replace('_', ' ')|capitalize }}:</strong> {{ value|round(3) }}</li>
+                {% endfor %}
+            </ul>
+            <a href="{{ metrics_download_url }}" class="btn btn-secondary">Download Metrics (Excel)</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+        <p style="color: #718096; font-size: 0.9rem;">
+            <strong>Note:</strong> Results are temporarily stored and will be automatically cleaned up. 
+            Make sure to download your segmentation mask if you need to keep it.
+        </p>
+    </div>
+</div>
+
+<script>
+function updateProgress() {
+    fetch(`/status/{{ job_id }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'PROGRESS') {
+                console.log('Progress update:', data);
+                const percentage = Math.round((data.current / data.total) * 100);
+                document.getElementById('progress-bar').style.width = percentage + '%';
+                document.getElementById('progress-text').textContent = `${data.message} (${percentage}%)`;
+                setTimeout(updateProgress, 1000);
+            } else if (data.status === 'PROCESSING') {
+                console.log('Still processing (no progress info yet):', data);
+                // Keep polling even without specific progress info
+                document.getElementById('progress-text').textContent = 'Processing...';
+                setTimeout(updateProgress, 1000);
+            } else if (data.status === 'SUCCESS') {
+                console.log('Processing complete:', data);
+                location.reload(); // Reload to show the results
+            } else {
+                console.log('Something weird happened:', data);
+                // Maybe still try again in case it's a temporary issue
+                setTimeout(updateProgress, 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            setTimeout(updateProgress, 2000); // Retry on network errors
+        });
+}
+
+// Start polling if currently processing
+if ('{{ status }}' === 'PROCESSING' || '{{ status }}' === 'PROGRESS') {
+    updateProgress();
+} else {
+    console.log('Status is: {{ status }}, no need to poll.');
+}
+</script>
+{% endblock %}
+

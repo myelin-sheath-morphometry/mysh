@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mysh"
+version = "0.0.1"
+dependencies = [
+  "numpy>=2.0",
+  "pillow>=10.4",
+  "pydantic>=2.8",
+  "torch>=2.5",
+  "lightning>=2.4",
+  "opencv-python>=4.10"
+]
+
+requires-python = ">=3.10"
+authors = [
+  {name = "Krzysztof Spalinski"}
+]
+maintainers = [
+  {name = "Krzysztof Spalinski"}
+]
+description = ""
+readme = "README.md"
+keywords = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python"
+]
+
+[project.optional-dependencies]
+webserver = [
+  "fastapi",
+  "uvicorn[standard]",
+  "celery",
+  "pandas",
+  "openpyxl",
+  "jinja2",
+  "python-multipart",
+  "sympy",
+  "tqdm",
+]
